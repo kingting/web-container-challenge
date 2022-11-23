@@ -1,0 +1,129 @@
+apiVersion: kops.k8s.io/v1alpha2
+kind: Cluster
+metadata:
+  creationTimestamp: null
+  name: kube.ocoo.au
+spec:
+  api:
+    loadBalancer:
+      class: Classic
+      type: Public
+  authorization:
+    rbac: {}
+  channel: stable
+  cloudProvider: aws
+  configBase: s3://kube-ocoo-au/kube.ocoo.au
+  etcdClusters:
+  - cpuRequest: 200m
+    etcdMembers:
+    - encryptedVolume: true
+      instanceGroup: master-ap-southeast-2a
+      name: a
+    memoryRequest: 100Mi
+    name: main
+  - cpuRequest: 100m
+    etcdMembers:
+    - encryptedVolume: true
+      instanceGroup: master-ap-southeast-2a
+      name: a
+    memoryRequest: 100Mi
+    name: events
+  iam:
+    allowContainerRegistry: true
+    legacy: false
+  kubeProxy:
+    enabled: false
+  kubelet:
+    anonymousAuth: false
+  kubernetesApiAccess:
+  - 0.0.0.0/0
+  - ::/0
+  kubernetesVersion: 1.25.4
+  masterPublicName: api.kube.ocoo.au
+  networkCIDR: 172.20.0.0/16
+  networking:
+    cilium:
+      enableNodePort: true
+  nonMasqueradeCIDR: 100.64.0.0/10
+  sshAccess:
+  - 0.0.0.0/0
+  - ::/0
+  subnets:
+  - cidr: 172.20.32.0/19
+    name: ap-southeast-2a
+    type: Private
+    zone: ap-southeast-2a
+  - cidr: 172.20.0.0/22
+    name: utility-ap-southeast-2a
+    type: Utility
+    zone: ap-southeast-2a
+  topology:
+    bastion:
+      bastionPublicName: bastion.kube.ocoo.au
+    dns:
+      type: Public
+    masters: private
+    nodes: private
+
+---
+
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  creationTimestamp: null
+  labels:
+    kops.k8s.io/cluster: kube.ocoo.au
+  name: master-ap-southeast-2a
+spec:
+  image: 099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20221018
+  instanceMetadata:
+    httpPutResponseHopLimit: 3
+    httpTokens: required
+  machineType: t3.medium
+  maxSize: 1
+  minSize: 1
+  role: Master
+  subnets:
+  - ap-southeast-2a
+
+---
+
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  creationTimestamp: null
+  labels:
+    kops.k8s.io/cluster: kube.ocoo.au
+  name: nodes-ap-southeast-2a
+spec:
+  image: 099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20221018
+  instanceMetadata:
+    httpPutResponseHopLimit: 1
+    httpTokens: required
+  machineType: t3.medium
+  maxSize: 2
+  minSize: 2
+  role: Node
+  subnets:
+  - ap-southeast-2a
+
+---
+
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  creationTimestamp: null
+  labels:
+    kops.k8s.io/cluster: kube.ocoo.au
+  name: bastions
+spec:
+  image: 099720109477/ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20221018
+  instanceMetadata:
+    httpPutResponseHopLimit: 1
+    httpTokens: required
+  machineType: t3.micro
+  maxSize: 1
+  minSize: 1
+  role: Bastion
+  subnets:
+  - ap-southeast-2a

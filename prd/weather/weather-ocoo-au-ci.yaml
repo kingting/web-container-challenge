@@ -1,0 +1,23 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: weather-ocoo-au-ci 
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: king@ozhut.com
+    privateKeySecretRef:
+      name: issuer-account-key
+    # this solver handles example.org challenges
+    # and uses explicit credentials
+    solvers:
+    - selector:
+        dnsZones:
+          - "weather.ocoo.au"
+      dns01:
+        route53:
+          region: ap-southeast-2
+          accessKeyID: AKIAS3MDOXGUZ6UJ356Z
+          secretAccessKeySecretRef:
+            name: route53-secret
+            key: secret-access-key
